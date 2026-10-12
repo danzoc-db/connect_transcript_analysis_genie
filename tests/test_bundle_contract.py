@@ -57,6 +57,7 @@ def test_github_workflows_validate_and_deploy_the_bundle():
     assert "databricks bundle deploy -t prod" in deploy
     assert "scripts/grant_bundle_file_access.py" in deploy
     assert "databricks bundle run -t prod connect_transcript_sentiment_job" in deploy
+    assert "--params contacts=20,batch_label=production" in deploy
     assert "DATABRICKS_AUTH_TYPE: github-oidc" in ci
     assert "DATABRICKS_AUTH_TYPE: github-oidc" in deploy
 

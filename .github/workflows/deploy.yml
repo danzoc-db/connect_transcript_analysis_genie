@@ -43,4 +43,6 @@ jobs:
           uv run python scripts/grant_bundle_file_access.py
           --runtime-principal "${{ vars.DATABRICKS_RUNTIME_CLIENT_ID }}"
       - name: Run end-to-end production workflow
-        run: databricks bundle run -t prod connect_transcript_sentiment_job
+        run: >-
+          databricks bundle run -t prod connect_transcript_sentiment_job
+          --params contacts=20,batch_label=production
