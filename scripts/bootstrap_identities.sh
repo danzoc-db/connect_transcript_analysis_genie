@@ -162,7 +162,7 @@ if ! tag_policy="$(
 fi
 tag_policy_id="$(jq -r '.id' <<<"$tag_policy")"
 
-if ! databricks domains get-domain customer-experience \
+if ! databricks domains get-domain domains/customer-experience \
   --profile "$PROFILE" >/dev/null 2>&1; then
   databricks domains create-domain customer_experience \
     --domain-id customer-experience \
@@ -170,7 +170,7 @@ if ! databricks domains get-domain customer-experience \
     --description "Customer interactions, service quality and experience analytics." \
     --profile "$PROFILE" >/dev/null
 fi
-if ! databricks domains get-domain contact-centre \
+if ! databricks domains get-domain domains/contact-centre \
   --profile "$PROFILE" >/dev/null 2>&1; then
   databricks domains create-domain "customer_experience/Contact Centre" \
     --domain-id contact-centre \

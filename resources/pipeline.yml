@@ -9,13 +9,6 @@ resources:
       photon: true
       continuous: false
       development: true
-      permissions:
-        - service_principal_name: ${var.runtime_service_principal_name}
-          level: CAN_RUN
-        - group_name: contact_centre_engineers
-          level: CAN_RUN
-        - group_name: contact_centre_analysts
-          level: CAN_VIEW
       configuration:
         volume_path: /Volumes/${var.catalog}/${var.schema}/raw_transcripts
       libraries:

@@ -32,6 +32,8 @@ variables:
     description: Maximum concurrent gateway requests.
   runtime_service_principal_name:
     description: Application ID of the production job runtime service principal.
+  deploy_service_principal_name:
+    description: Application ID of the CI bundle deployment service principal.
 
 targets:
   dev:
@@ -48,6 +50,17 @@ targets:
       sentiment_model_units: 50
       scoring_max_workers: 8
       runtime_service_principal_name: ac987c67-e11e-4f57-a001-a97868846e8a
+      deploy_service_principal_name: ce8ab7f6-be4b-45fb-b820-7cd48de9b1a3
+    resources:
+      pipelines:
+        transcript_pipeline:
+          permissions:
+            - service_principal_name: ${var.runtime_service_principal_name}
+              level: CAN_RUN
+            - group_name: contact_centre_engineers
+              level: CAN_RUN
+            - group_name: contact_centre_analysts
+              level: CAN_VIEW
 
   prod:
     mode: production
@@ -63,6 +76,7 @@ targets:
       sentiment_model_units: 50
       scoring_max_workers: 8
       runtime_service_principal_name: ac987c67-e11e-4f57-a001-a97868846e8a
+      deploy_service_principal_name: ce8ab7f6-be4b-45fb-b820-7cd48de9b1a3
     resources:
       jobs:
         connect_transcript_sentiment_job:
@@ -82,6 +96,9 @@ targets:
             - principal: ${var.runtime_service_principal_name}
               privileges:
                 - EXECUTE
+            - principal: ${var.deploy_service_principal_name}
+              privileges:
+                - MANAGE
           config:
             routing:
               destinations:

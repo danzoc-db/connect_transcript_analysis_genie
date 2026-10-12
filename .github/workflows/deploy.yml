@@ -39,9 +39,14 @@ jobs:
       - name: Deploy production bundle
         run: databricks bundle deploy -t prod
       - name: Grant runtime access to deployed notebooks
-        run: >-
-          uv run python scripts/grant_bundle_file_access.py
-          --runtime-principal "${{ vars.DATABRICKS_RUNTIME_CLIENT_ID }}"
+        run: |
+          pipeline_id="$(
+            databricks bundle summary -t prod --output json |
+              jq -r '.resources.pipelines.transcript_pipeline.id'
+          )"
+          uv run python scripts/grant_bundle_file_access.py \
+            --runtime-principal "${{ vars.DATABRICKS_RUNTIME_CLIENT_ID }}" \
+            --pipeline-id "$pipeline_id"
       - name: Run end-to-end production workflow
         run: >-
           databricks bundle run -t prod connect_transcript_sentiment_job
