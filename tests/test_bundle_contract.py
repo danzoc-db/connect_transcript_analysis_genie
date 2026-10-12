@@ -33,6 +33,16 @@ def test_workspace_values_only_appear_in_target_overrides():
     assert "contact_centre_analytics" in targets
 
 
+def test_deploy_identity_retains_management_access():
+    bundle = (ROOT / "databricks.yml").read_text()
+    schema = (ROOT / "resources" / "schema.yml").read_text()
+    access_script = (ROOT / "scripts" / "grant_bundle_file_access.py").read_text()
+    assert "deploy_service_principal_name:" in bundle
+    assert "${var.deploy_service_principal_name}" in schema
+    assert "--pipeline-id" in access_script
+    assert "/api/2.0/permissions/pipelines/" in access_script
+
+
 def test_agent_rule_mirrors_are_identical():
     assert (ROOT / "AGENTS.md").read_text() == (ROOT / ".cursorrules").read_text()
 
@@ -56,10 +66,18 @@ def test_github_workflows_validate_and_deploy_the_bundle():
     assert "--runtime-principal" in deploy
     assert "databricks bundle deploy -t prod" in deploy
     assert "scripts/grant_bundle_file_access.py" in deploy
+    assert "bundle summary -t prod --output json" in deploy
+    assert "--pipeline-id" in deploy
     assert "databricks bundle run -t prod connect_transcript_sentiment_job" in deploy
     assert "--params contacts=20,batch_label=production" in deploy
     assert "DATABRICKS_AUTH_TYPE: github-oidc" in ci
     assert "DATABRICKS_AUTH_TYPE: github-oidc" in deploy
+
+
+def test_domain_bootstrap_uses_full_resource_names():
+    bootstrap = (ROOT / "scripts" / "bootstrap_identities.sh").read_text()
+    assert "get-domain domains/customer-experience" in bootstrap
+    assert "get-domain domains/contact-centre" in bootstrap
 
 
 def test_genie_examples_use_serialized_space_array_contract():

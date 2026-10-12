@@ -35,6 +35,7 @@ Edit only the `dev` and `prod` overrides in `databricks.yml`:
 - `schema`
 - `warehouse_id`
 - `runtime_service_principal_name`
+- `deploy_service_principal_name`
 
 The root `variables` block intentionally contains no workspace-specific defaults.
 

@@ -13,6 +13,12 @@ resources:
             - APPLY_TAG
             - SELECT
             - MODIFY
+        - principal: ${var.deploy_service_principal_name}
+          privileges:
+            - USE_SCHEMA
+            - CREATE_TABLE
+            - CREATE_VOLUME
+            - MANAGE
 
   volumes:
     raw_transcripts:
@@ -26,3 +32,6 @@ resources:
           privileges:
             - READ_VOLUME
             - WRITE_VOLUME
+        - principal: ${var.deploy_service_principal_name}
+          privileges:
+            - MANAGE
