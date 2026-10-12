@@ -149,6 +149,7 @@ Live moment in the room: open the workspace **Git folder**, use **Genie Code** t
 - Initial load: 60 bronze rows, 57 silver rows and 57 scored rows. Each planted drop expectation failed exactly one input row. All sentiment columns stayed inside the four-label contract and closing-label agreement was 100 percent.
 - Idempotent rerun: the scoring task reported `No new contacts; endpoint parked at 0 PMU.`
 - Incremental load: `second-drop` added 20 bronze rows, 17 valid silver rows and exactly 17 scored rows. The inference table recorded 68 calls, all tagged with the job ID, run ID, project and task.
+- Production validation: all five orchestrated tasks succeeded for a 20-contact batch, the three planted bad records were dropped, all 17 valid contacts were scored, and 68 of 68 tagged model-service calls succeeded. See [`docs/evidence/production-validation.md`](evidence/production-validation.md).
 - Metric view: measure queries succeeded, and the `daily_queue_metrics` relaxed materialization refreshed successfully.
 - Genie: the deployed space uses the metric view plus the sentiment drill table. API questions for highest negative share and opening-versus-closing sentiment completed successfully with valid `MEASURE()` SQL.
 - Governance: the four Unity Catalog data assets and the Genie space carry the exact `customer_experience/Contact Centre` tag.

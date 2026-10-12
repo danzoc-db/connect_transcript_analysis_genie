@@ -68,14 +68,20 @@ also receive Unity Catalog privileges.
 Run the bootstrap as a workspace admin:
 
 ```bash
+databricks auth login \
+  --host https://accounts.azuredatabricks.net \
+  --account-id your-account-id \
+  --profile your-account-profile
+
 bash scripts/bootstrap_identities.sh \
   --profile your-profile \
+  --account-profile your-account-profile \
   --catalog your-catalog \
   --warehouse-id your-warehouse-id
 ```
 
-The script prints the application IDs and the remaining account-admin role assignment when that
-assignment cannot be made through the workspace profile.
+The account profile is required to grant Service Principal User to the deploy identity. If it is
+omitted, the script prints the remaining account-admin role assignment.
 
 For this demo, create a workspace OAuth secret for the deploy principal and store these GitHub
 settings:

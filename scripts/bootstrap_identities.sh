@@ -2,6 +2,7 @@
 set -euo pipefail
 
 PROFILE=""
+ACCOUNT_PROFILE=""
 GITHUB_REPO=""
 CATALOG=""
 WAREHOUSE_ID=""
@@ -12,6 +13,7 @@ usage() {
 Usage: bootstrap_identities.sh --profile PROFILE [options]
 
 Options:
+  --account-profile PROFILE  Grant Service Principal User through account APIs.
   --catalog CATALOG          Grant USE CATALOG to the runtime principal.
   --warehouse-id ID          Grant CAN_USE on the SQL warehouse.
   --github-repo OWNER/REPO  Configure GitHub Actions settings.
@@ -26,6 +28,10 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --profile)
       PROFILE="$2"
+      shift 2
+      ;;
+    --account-profile)
+      ACCOUNT_PROFILE="$2"
       shift 2
       ;;
     --github-repo)
@@ -119,14 +125,160 @@ deploy_id="$(jq -r '.id' <<<"$deploy_sp")"
 deploy_application_id="$(jq -r '.applicationId' <<<"$deploy_sp")"
 runtime_application_id="$(jq -r '.applicationId' <<<"$runtime_sp")"
 
+entitlement_patch='{
+  "schemas": ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
+  "Operations": [{
+    "op": "add",
+    "path": "entitlements",
+    "value": [
+      {"value": "workspace-access"},
+      {"value": "databricks-sql-access"}
+    ]
+  }]
+}'
+for principal_id in "$deploy_id" "$(jq -r '.id' <<<"$runtime_sp")"; do
+  databricks service-principals patch "$principal_id" \
+    --profile "$PROFILE" \
+    --json "$entitlement_patch" >/dev/null
+done
+
 echo "Deploy application ID:  $deploy_application_id"
 echo "Runtime application ID: $runtime_application_id"
 echo
 echo "Set runtime_service_principal_name in the target override to:"
 echo "  $runtime_application_id"
-echo
-echo "An account admin must grant Service Principal User on"
-echo "sp-connect-transcript-runtime to sp-connect-transcript-deploy."
+
+if ! tag_policy="$(
+  databricks tag-policies get-tag-policy customer_experience \
+    --profile "$PROFILE" \
+    --output json 2>/dev/null
+)"; then
+  tag_policy="$(
+    databricks tag-policies create-tag-policy customer_experience \
+      --description "Domain tag for customer experience data products." \
+      --profile "$PROFILE" \
+      --output json
+  )"
+fi
+tag_policy_id="$(jq -r '.id' <<<"$tag_policy")"
+
+if ! databricks domains get-domain customer-experience \
+  --profile "$PROFILE" >/dev/null 2>&1; then
+  databricks domains create-domain customer_experience \
+    --domain-id customer-experience \
+    --subtitle "Customer Experience" \
+    --description "Customer interactions, service quality and experience analytics." \
+    --profile "$PROFILE" >/dev/null
+fi
+if ! databricks domains get-domain contact-centre \
+  --profile "$PROFILE" >/dev/null 2>&1; then
+  databricks domains create-domain "customer_experience/Contact Centre" \
+    --domain-id contact-centre \
+    --parent-domain-id customer-experience \
+    --subtitle "Contact Centre" \
+    --description "Governed Amazon Connect transcript, sentiment and service-level analytics." \
+    --profile "$PROFILE" >/dev/null
+fi
+echo "Ensured Customer Experience > Contact Centre domain"
+
+if [[ -n "$ACCOUNT_PROFILE" ]]; then
+  account_id="$(
+    databricks auth env --profile "$ACCOUNT_PROFILE" |
+      jq -r '.env.DATABRICKS_ACCOUNT_ID'
+  )"
+  current_user="$(
+    databricks current-user me --profile "$PROFILE" --output json |
+      jq -r '.userName'
+  )"
+  rule_name="accounts/$account_id/servicePrincipals/$runtime_application_id/ruleSets/default"
+  rule_set="$(
+    databricks account access-control get-rule-set \
+      "$rule_name" "" \
+      --profile "$ACCOUNT_PROFILE" \
+      --output json
+  )"
+  rule_update="$(
+    jq -c \
+      --arg deploy "servicePrincipals/$deploy_application_id" \
+      --arg user "users/$current_user" \
+      '
+      .grant_rules = (
+        if any(.grant_rules[]?; .role == "roles/servicePrincipal.user") then
+          [.grant_rules[] |
+            if .role == "roles/servicePrincipal.user" then
+              .principals = ((.principals + [$deploy, $user]) | unique)
+            else
+              .
+            end
+          ]
+        else
+          .grant_rules + [{
+            role: "roles/servicePrincipal.user",
+            principals: [$deploy, $user]
+          }]
+        end
+      )
+      | {
+          name: .name,
+          rule_set: {
+            name: .name,
+            etag: .etag,
+            grant_rules: .grant_rules
+          }
+        }
+      ' <<<"$rule_set"
+  )"
+  databricks account access-control update-rule-set \
+    --profile "$ACCOUNT_PROFILE" \
+    --json "$rule_update" >/dev/null
+  echo "Granted Service Principal User on the runtime identity"
+
+  tag_rule_name="accounts/$account_id/tagPolicies/$tag_policy_id/ruleSets/default"
+  tag_rule_set="$(
+    databricks account access-control get-rule-set \
+      "$tag_rule_name" "" \
+      --profile "$ACCOUNT_PROFILE" \
+      --output json
+  )"
+  tag_rule_update="$(
+    jq -c \
+      --arg runtime "servicePrincipals/$runtime_application_id" \
+      '
+      .grant_rules = (
+        if any(.grant_rules[]?; .role == "roles/tagPolicy.assigner") then
+          [.grant_rules[] |
+            if .role == "roles/tagPolicy.assigner" then
+              .principals = ((.principals + [$runtime]) | unique)
+            else
+              .
+            end
+          ]
+        else
+          .grant_rules + [{
+            role: "roles/tagPolicy.assigner",
+            principals: [$runtime]
+          }]
+        end
+      )
+      | {
+          name: .name,
+          rule_set: {
+            name: .name,
+            etag: .etag,
+            grant_rules: .grant_rules
+          }
+        }
+      ' <<<"$tag_rule_set"
+  )"
+  databricks account access-control update-rule-set \
+    --profile "$ACCOUNT_PROFILE" \
+    --json "$tag_rule_update" >/dev/null
+  echo "Granted runtime governed tag assignment"
+else
+  echo
+  echo "An account admin must grant Service Principal User on"
+  echo "sp-connect-transcript-runtime to sp-connect-transcript-deploy."
+fi
 
 if [[ -n "$CATALOG" ]]; then
   grant_body="$(

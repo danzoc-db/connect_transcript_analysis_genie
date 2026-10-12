@@ -28,10 +28,22 @@ def configure_genie(space_id: str) -> None:
     serialized = json.loads(response.get("serialized_space") or '{"version":2}')
     serialized["data_sources"] = {
         "tables": [
-            {"identifier": f"{catalog}.{schema}.contact_sentiment_metrics"},
             {"identifier": f"{catalog}.{schema}.silver_transcript_sentiment"},
-        ]
+        ],
+        "metric_views": [
+            {"identifier": f"{catalog}.{schema}.contact_sentiment_metrics"},
+        ],
     }
+    serialized.setdefault("config", {})["sample_questions"] = [
+        {
+            "id": "41111111111111111111111111111111",
+            "question": ["Which queue had the highest negative share?"],
+        },
+        {
+            "id": "42222222222222222222222222222222",
+            "question": ["Compare opening and closing sentiment by queue."],
+        },
+    ]
     instruction_id = "11111111111111111111111111111111"
     serialized["instructions"] = {
         "text_instructions": [

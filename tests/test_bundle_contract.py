@@ -55,6 +55,7 @@ def test_github_workflows_validate_and_deploy_the_bundle():
     assert "--units 0" in deploy
     assert "--runtime-principal" in deploy
     assert "databricks bundle deploy -t prod" in deploy
+    assert "scripts/grant_bundle_file_access.py" in deploy
     assert "databricks bundle run -t prod connect_transcript_sentiment_job" in deploy
     assert "DATABRICKS_AUTH_TYPE: github-oidc" in ci
     assert "DATABRICKS_AUTH_TYPE: github-oidc" in deploy
@@ -62,6 +63,8 @@ def test_github_workflows_validate_and_deploy_the_bundle():
 
 def test_genie_examples_use_serialized_space_array_contract():
     notebook = (ROOT / "notebooks" / "03_register_domain_assets.py").read_text()
+    assert '"metric_views": [' in notebook
+    assert '["sample_questions"]' in notebook
     assert '"question": ["Which queue had the highest negative share?"]' in notebook
     assert 'serialized["benchmarks"] = {' in notebook
     assert '"answer": [' in notebook

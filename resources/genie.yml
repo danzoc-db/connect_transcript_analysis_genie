@@ -1,7 +1,7 @@
 resources:
   genie_spaces:
     contact_sentiment:
-      title: Contact Centre Sentiment and Service Intelligence
+      title: ${bundle.target} - Contact Centre Sentiment and Service Intelligence
       description: Governed Amazon Connect sentiment, recovery and handling analytics.
       warehouse_id: ${var.warehouse_id}
       parent_path: /Shared/Connect Transcript Analysis
