@@ -14,7 +14,11 @@ from databricks.sdk.errors import NotFound
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from connect_sentiment.pt_endpoint import create_payload, update_payload  # noqa: E402
+from connect_sentiment.pt_endpoint import (  # noqa: E402
+    ENDPOINT_TAGS,
+    create_payload,
+    update_payload,
+)
 
 DEFAULT_ENDPOINT = "connect-sentiment-gpt-oss-20b"
 DEFAULT_MODEL = "system.ai.gpt-oss-20b"
@@ -67,6 +71,23 @@ def wait_ready(
     raise TimeoutError(f"Endpoint {name} did not become ready within {timeout_seconds}s")
 
 
+def ensure_tags(client: WorkspaceClient, endpoint: dict[str, Any]) -> None:
+    current_tags = {tag["key"]: tag.get("value", "") for tag in endpoint.get("tags", [])}
+    add_tags = [
+        tag for tag in ENDPOINT_TAGS if current_tags.get(tag["key"]) != tag["value"]
+    ]
+    delete_tags = ["project"] if "project" in current_tags else []
+    if not add_tags and not delete_tags:
+        return
+    request(
+        client,
+        "PATCH",
+        f"/api/2.0/serving-endpoints/{endpoint['name']}/tags",
+        {"add_tags": add_tags, "delete_tags": delete_tags},
+    )
+    print(f"Updated governed endpoint tags on {endpoint['name']}")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--profile", help="Databricks CLI profile; omit for environment auth")
@@ -116,10 +137,11 @@ def main() -> None:
             print(f"Endpoint {args.endpoint} already has {args.units} model units")
 
     wait_ready(client, args.endpoint, args.units, args.timeout_seconds)
+    endpoint = get_endpoint(client, args.endpoint)
+    if endpoint is None:
+        raise RuntimeError(f"Endpoint disappeared before tag update: {args.endpoint}")
+    ensure_tags(client, endpoint)
     if args.runtime_principal:
-        endpoint = get_endpoint(client, args.endpoint)
-        if endpoint is None:
-            raise RuntimeError(f"Endpoint disappeared before permissions update: {args.endpoint}")
         request(
             client,
             "PATCH",
