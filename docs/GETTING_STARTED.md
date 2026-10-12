@@ -91,6 +91,12 @@ For customer deployments, prefer GitHub OIDC workload identity federation. Confi
 Databricks federation policy for the repository, grant `id-token: write` in the workflows, set
 `DATABRICKS_AUTH_TYPE: github-oidc`, and remove the stored client secret.
 
+If the workspace enforces an IP access list, GitHub-hosted runner addresses may be blocked.
+Register a self-hosted runner on an allowed network, set the repository variable
+`DATABRICKS_RUNNER` to its runner label, and set `DATABRICKS_WORKSPACE_CI_ENABLED=true`.
+Offline pull-request lint and tests remain on GitHub-hosted runners; workspace bundle validation
+and deployment use the network-approved runner.
+
 ## 3. Create the parked PT endpoint
 
 The current bundle provider uses the classic serving-endpoint API, which is not valid for this

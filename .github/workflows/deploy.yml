@@ -17,7 +17,7 @@ concurrency:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.DATABRICKS_RUNNER || 'ubuntu-latest' }}
     environment: production
     env:
       DATABRICKS_HOST: ${{ vars.DATABRICKS_HOST }}
