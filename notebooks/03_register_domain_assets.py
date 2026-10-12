@@ -150,15 +150,10 @@ def grant_analyst_access() -> None:
     schema_id = quote_identifier(schema)
     analyst_group = quote_identifier("contact_centre_analysts")
     spark.sql(f"GRANT USE CATALOG ON CATALOG {catalog_id} TO {analyst_group}")
-    spark.sql(
-        f"GRANT USE SCHEMA ON SCHEMA {catalog_id}.{schema_id} TO {analyst_group}"
-    )
+    spark.sql(f"GRANT USE SCHEMA ON SCHEMA {catalog_id}.{schema_id} TO {analyst_group}")
     for asset in ("silver_transcript_sentiment", "contact_sentiment_metrics"):
         asset_id = quote_identifier(asset)
-        spark.sql(
-            f"GRANT SELECT ON TABLE {catalog_id}.{schema_id}.{asset_id} "
-            f"TO {analyst_group}"
-        )
+        spark.sql(f"GRANT SELECT ON TABLE {catalog_id}.{schema_id}.{asset_id} TO {analyst_group}")
     print("Granted analyst access to the governed semantic layer")
 
 
