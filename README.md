@@ -1,2 +1,50 @@
-# connect_transcript_analysis_genie
-Governed Amazon Connect transcript sentiment analytics on Databricks with Unity AI Gateway, metric views, and Genie
+# Connect Transcript Analysis + Genie
+
+This public Databricks demo turns synthetic Amazon Connect Contact Lens transcripts into
+governed contact-centre insights that analysts can query in natural language.
+
+## Architecture
+
+```text
+Synthetic Contact Lens JSON
+            |
+            v
+Unity Catalog volume
+            |
+            v
+Lakeflow Spark Declarative Pipeline
+  bronze_transcripts -> silver_transcripts
+            |
+            v
+Python scoring task -> Unity AI Gateway model service
+                    -> gpt-oss-20b PT endpoint
+            |
+            v
+transcript_sentiment Delta table
+            |
+            v
+Unity Catalog metric view -> Genie space
+```
+
+The pipeline uses expectations to drop unusable contacts and retain warnings for suspicious
+records. The scoring task analyzes customer speech over early, middle, late and overall windows,
+then incrementally MERGEs one result per contact. The endpoint is raised to 50 provisioned model
+units only while scoring and parked at zero afterward.
+
+## Highlights
+
+- Databricks Asset Bundles deploy the schema, volume, pipeline, job and Genie space.
+- A Unity AI Gateway model service governs every inference request.
+- The sentiment contract is `positive`, `negative`, `neutral`, `mixed` or NULL.
+- Unity Catalog domains group the silver tables, sentiment table, metric view and Genie space.
+- Offline tests cover coherent data generation, scoring behavior, data-quality expectations and
+  bundle contracts.
+- GitHub Actions validates pull requests and deploys `main`.
+
+## Quick start
+
+See [Getting started](docs/GETTING_STARTED.md). The design rationale is in
+[Architecture decisions](docs/architecture-decisions.md), and the presenter workflow is in
+[Demo guide](docs/DEMO_GUIDE.md).
+
+This project generates fictional data. It does not contain real customer or personal data.

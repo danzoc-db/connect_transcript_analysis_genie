@@ -1,0 +1,28 @@
+resources:
+  schemas:
+    analytics_schema:
+      name: ${var.schema}
+      catalog_name: ${var.catalog}
+      comment: Contact centre transcript analytics managed by Databricks Asset Bundles.
+      grants:
+        - principal: ${var.runtime_service_principal_name}
+          privileges:
+            - USE_SCHEMA
+            - CREATE_TABLE
+            - CREATE_VOLUME
+            - APPLY_TAG
+            - SELECT
+            - MODIFY
+
+  volumes:
+    raw_transcripts:
+      name: raw_transcripts
+      catalog_name: ${var.catalog}
+      schema_name: ${resources.schemas.analytics_schema.name}
+      volume_type: MANAGED
+      comment: Synthetic or copied Amazon Connect Contact Lens JSON landing area.
+      grants:
+        - principal: ${var.runtime_service_principal_name}
+          privileges:
+            - READ_VOLUME
+            - WRITE_VOLUME

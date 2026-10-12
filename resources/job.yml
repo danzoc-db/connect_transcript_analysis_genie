@@ -1,0 +1,93 @@
+resources:
+  jobs:
+    connect_transcript_sentiment_job:
+      name: ${bundle.target}-connect-transcript-sentiment
+      max_concurrent_runs: 1
+      timeout_seconds: 7200
+      schedule:
+        quartz_cron_expression: 0 0 6 * * ?
+        timezone_id: UTC
+        pause_status: PAUSED
+      tags:
+        project: connect_transcript_analysis_genie
+        domain: customer_experience
+        cost_centre: contact_centre
+      permissions:
+        - group_name: contact_centre_engineers
+          level: CAN_MANAGE_RUN
+        - group_name: contact_centre_analysts
+          level: CAN_VIEW
+      parameters:
+        - name: catalog
+          default: ${var.catalog}
+        - name: schema
+          default: ${var.schema}
+        - name: contacts
+          default: "400"
+        - name: batch_label
+          default: initial
+      environments:
+        - environment_key: default
+          spec:
+            client: "2"
+      tasks:
+        - task_key: land_transcripts
+          environment_key: default
+          notebook_task:
+            notebook_path: ../notebooks/01_land_transcripts.py
+            source: WORKSPACE
+            base_parameters:
+              volume_path: /Volumes/${var.catalog}/${var.schema}/raw_transcripts
+              contacts: "{{job.parameters.contacts}}"
+              batch_label: "{{job.parameters.batch_label}}"
+              seed: "42"
+              plant_bad: "true"
+              skip_if_exists: "true"
+
+        - task_key: refresh_pipeline
+          depends_on:
+            - task_key: land_transcripts
+          pipeline_task:
+            pipeline_id: ${resources.pipelines.transcript_pipeline.id}
+            full_refresh: false
+
+        - task_key: score_sentiment
+          depends_on:
+            - task_key: refresh_pipeline
+          environment_key: default
+          notebook_task:
+            notebook_path: ../notebooks/02_score_sentiment.py
+            source: WORKSPACE
+            base_parameters:
+              catalog: "{{job.parameters.catalog}}"
+              schema: "{{job.parameters.schema}}"
+              model_service: ${var.catalog}.${var.schema}.transcript_sentiment
+              endpoint_name: ${var.sentiment_endpoint_name}
+              model_units: ${var.sentiment_model_units}
+              max_workers: ${var.scoring_max_workers}
+              job_id: "{{job.id}}"
+              job_run_id: "{{job.run_id}}"
+
+        - task_key: publish_metric_view
+          depends_on:
+            - task_key: score_sentiment
+          sql_task:
+            warehouse_id: ${var.warehouse_id}
+            file:
+              path: ../sql/contact_sentiment_metrics.sql
+            parameters:
+              catalog: "{{job.parameters.catalog}}"
+              schema: "{{job.parameters.schema}}"
+
+        - task_key: register_domain_assets
+          depends_on:
+            - task_key: publish_metric_view
+          environment_key: default
+          notebook_task:
+            notebook_path: ../notebooks/03_register_domain_assets.py
+            source: WORKSPACE
+            base_parameters:
+              catalog: "{{job.parameters.catalog}}"
+              schema: "{{job.parameters.schema}}"
+              genie_space_id: ${resources.genie_spaces.contact_sentiment.id}
+              domain_tag_key: customer_experience/Contact Centre

@@ -1,0 +1,23 @@
+resources:
+  pipelines:
+    transcript_pipeline:
+      name: ${bundle.target}-connect-transcript-medallion
+      catalog: ${var.catalog}
+      schema: ${resources.schemas.analytics_schema.name}
+      serverless: true
+      channel: CURRENT
+      photon: true
+      continuous: false
+      development: true
+      permissions:
+        - group_name: contact_centre_engineers
+          level: CAN_RUN
+        - group_name: contact_centre_analysts
+          level: CAN_VIEW
+      configuration:
+        volume_path: /Volumes/${var.catalog}/${var.schema}/raw_transcripts
+      libraries:
+        - file:
+            path: ../pipelines/01_bronze_transcripts.sql
+        - file:
+            path: ../pipelines/02_silver_transcripts.sql
