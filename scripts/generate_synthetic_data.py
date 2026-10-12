@@ -1,0 +1,45 @@
+"""Land synthetic Amazon Connect Contact Lens transcripts in a UC volume."""
+
+from __future__ import annotations
+
+import argparse
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+SRC = ROOT / "src"
+if str(SRC) not in sys.path:
+    sys.path.insert(0, str(SRC))
+
+from connect_sentiment.generator import generate_contacts, random_for_batch, write_contacts
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--volume_path", required=True)
+    parser.add_argument("--contacts", type=int, default=400)
+    parser.add_argument("--days_back", type=int, default=60)
+    parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--batch_label", default="initial")
+    parser.add_argument("--plant_bad", default="true")
+    parser.add_argument("--skip_if_exists", default="true")
+    args, _ = parser.parse_known_args()
+
+    contacts = generate_contacts(
+        random_for_batch(args.seed, args.batch_label),
+        args.contacts,
+        plant_bad=args.plant_bad.lower() == "true",
+        batch_label=args.batch_label,
+        days_back=args.days_back,
+    )
+    written = write_contacts(
+        args.volume_path,
+        contacts,
+        batch_label=args.batch_label,
+        skip_if_exists=args.skip_if_exists.lower() == "true",
+    )
+    print(f"Wrote {written} transcripts for batch {args.batch_label!r} under {args.volume_path}")
+
+
+if __name__ == "__main__":
+    main()

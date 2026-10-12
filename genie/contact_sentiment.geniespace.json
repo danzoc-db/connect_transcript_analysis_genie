@@ -1,0 +1,17 @@
+{
+  "version": 2,
+  "instructions": {
+    "text_instructions": [
+      {
+        "id": "11111111111111111111111111111111",
+        "content": [
+          "Use the governed metric view for KPI questions.\n",
+          "Sentiment is positive, negative, neutral, mixed, or NULL.\n",
+          "Negative share means negative contacts divided by scored contacts.\n",
+          "Weeks start on Monday.\n",
+          "Do not show full transcript text unless the user explicitly asks for examples.\n"
+        ]
+      }
+    ]
+  }
+}

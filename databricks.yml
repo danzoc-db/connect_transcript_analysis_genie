@@ -1,0 +1,98 @@
+bundle:
+  name: connect_transcript_analysis_genie
+
+include:
+  - resources/*.yml
+
+sync:
+  include:
+    - pipelines/**
+    - scripts/**
+    - src/**
+    - notebooks/**
+    - sql/**
+    - genie/**
+
+variables:
+  catalog:
+    description: Existing Unity Catalog catalog.
+  schema:
+    description: Schema for transcript analytics assets.
+  warehouse_id:
+    description: SQL warehouse used by the metric-view task and Genie.
+  sentiment_endpoint_name:
+    description: Provisioned-throughput endpoint name.
+  sentiment_base_model:
+    description: Databricks-hosted, in-region foundation model.
+  sentiment_model_version:
+    description: Unity Catalog model version.
+  sentiment_model_units:
+    description: Provisioned model units while scoring.
+  scoring_max_workers:
+    description: Maximum concurrent gateway requests.
+  runtime_service_principal_name:
+    description: Application ID of the production job runtime service principal.
+
+targets:
+  dev:
+    default: true
+    workspace:
+      profile: azsu-centrica-demo
+    variables:
+      catalog: contact_centre_analytics
+      schema: connect_analytics_dev
+      warehouse_id: 4c992f1d4de33244
+      sentiment_endpoint_name: connect-sentiment-gpt-oss-20b
+      sentiment_base_model: system.ai.gpt-oss-20b
+      sentiment_model_version: "1"
+      sentiment_model_units: 50
+      scoring_max_workers: 8
+      runtime_service_principal_name: ac987c67-e11e-4f57-a001-a97868846e8a
+
+  prod:
+    mode: production
+    workspace:
+      root_path: /Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.name}/${bundle.target}
+    variables:
+      catalog: contact_centre_analytics
+      schema: connect_analytics
+      warehouse_id: 4c992f1d4de33244
+      sentiment_endpoint_name: connect-sentiment-gpt-oss-20b
+      sentiment_base_model: system.ai.gpt-oss-20b
+      sentiment_model_version: "1"
+      sentiment_model_units: 50
+      scoring_max_workers: 8
+      runtime_service_principal_name: ac987c67-e11e-4f57-a001-a97868846e8a
+    resources:
+      jobs:
+        connect_transcript_sentiment_job:
+          run_as:
+            service_principal_name: ${var.runtime_service_principal_name}
+      pipelines:
+        transcript_pipeline:
+          development: false
+          run_as:
+            service_principal_name: ${var.runtime_service_principal_name}
+      model_services:
+        transcript_sentiment:
+          parent: schemas/${var.catalog}.${resources.schemas.analytics_schema.name}
+          model_service_id: transcript_sentiment
+          comment: Governed transcript sentiment service backed by in-region provisioned throughput.
+          grants:
+            - principal: ${var.runtime_service_principal_name}
+              privileges:
+                - EXECUTE
+          config:
+            routing:
+              destinations:
+                - name: gpt_oss_20b_pt
+                  destination_type: DESTINATION_TYPE_PROVISIONED_THROUGHPUT_FOUNDATION_MODEL
+                  provisioned_throughput_config:
+                    model_serving_endpoint: serving-endpoints/${var.sentiment_endpoint_name}
+            inference_table:
+              parent: schemas/${var.catalog}.${resources.schemas.analytics_schema.name}
+              table_name_prefix: transcript_sentiment
+            rate_limits:
+              - key: RATE_LIMIT_KEY_SERVICE
+                renewal_period: RATE_LIMIT_RENEWAL_PERIOD_MINUTE
+                requests: 600
