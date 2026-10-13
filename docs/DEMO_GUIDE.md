@@ -22,6 +22,23 @@ metric view supplies consistent measures to Genie.
 Use `notebooks/04_gateway_observability.py` to show request volume, tokens, latency, errors and
 sample synthetic payloads recorded by Unity AI Gateway.
 
+## Genie Ontology Page
+
+Create and publish the **Net Sentiment Score (NSS)** Page in the Contact Centre subdomain from
+[`ontology/net-sentiment-score.md`](ontology/net-sentiment-score.md). Add the production metric
+view as both a related asset and a source.
+
+Pages are a Beta Discover feature and do not currently have a public REST API, CLI command, or
+bundle resource. Create this Page from **Discover > Pages > Create page**, or attach the markdown
+file to Genie Code and use **Bulk import pages**. After publishing it, ask Genie One:
+
+```text
+What does NSS mean for the Contact Centre, and which queue currently has the lowest NSS?
+```
+
+The answer should cite the Page for the definition and use the metric view for the analytical
+result.
+
 ## Live change
 
 Follow [LIVE_DEMO_CHANGE.md](LIVE_DEMO_CHANGE.md). Uncomment only the

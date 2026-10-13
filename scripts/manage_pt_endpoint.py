@@ -73,9 +73,7 @@ def wait_ready(
 
 def ensure_tags(client: WorkspaceClient, endpoint: dict[str, Any]) -> None:
     current_tags = {tag["key"]: tag.get("value", "") for tag in endpoint.get("tags", [])}
-    add_tags = [
-        tag for tag in ENDPOINT_TAGS if current_tags.get(tag["key"]) != tag["value"]
-    ]
+    add_tags = [tag for tag in ENDPOINT_TAGS if current_tags.get(tag["key"]) != tag["value"]]
     delete_tags = ["project"] if "project" in current_tags else []
     if not add_tags and not delete_tags:
         return

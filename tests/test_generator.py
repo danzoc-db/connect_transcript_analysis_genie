@@ -7,6 +7,7 @@ import random
 from pathlib import Path
 
 from connect_sentiment.generator import (
+    INTENTS,
     QUEUES,
     generate_contacts,
     random_for_batch,
@@ -90,6 +91,23 @@ def test_turns_within_a_contact_stay_on_one_intent():
         if intent_id == "book_smart_meter_install":
             assert "nobody turned up" not in joined
             assert "second missed" not in joined
+
+
+def test_every_queue_has_an_intent_and_large_batches_are_balanced():
+    assert {intent["queue"] for intent in INTENTS} == set(QUEUES)
+    contacts = generate_contacts(
+        random_for_batch(42, "queue-balance"),
+        n=800,
+        plant_bad=False,
+        batch_label="queue-balance",
+    )
+    counts = {
+        queue: sum(
+            contact["ContactAttributes"]["Queue"] == queue for _, contact in contacts
+        )
+        for queue in QUEUES
+    }
+    assert all(70 <= count <= 130 for count in counts.values()), counts
 
 
 def test_plants_bad_records_for_quality_rules():
