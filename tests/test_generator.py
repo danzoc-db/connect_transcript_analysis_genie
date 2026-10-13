@@ -102,9 +102,7 @@ def test_every_queue_has_an_intent_and_large_batches_are_balanced():
         batch_label="queue-balance",
     )
     counts = {
-        queue: sum(
-            contact["ContactAttributes"]["Queue"] == queue for _, contact in contacts
-        )
+        queue: sum(contact["ContactAttributes"]["Queue"] == queue for _, contact in contacts)
         for queue in QUEUES
     }
     assert all(70 <= count <= 130 for count in counts.values()), counts
