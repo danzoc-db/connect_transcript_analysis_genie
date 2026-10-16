@@ -16,6 +16,8 @@ def test_create_payload_uses_model_unit_pt_contract():
     assert "max_provisioned_throughput" not in entity
     assert "scale_to_zero_enabled" not in entity
     assert "ai_gateway" not in payload
+    assert {"key": "demo_project", "value": "connect_transcript_genie"} in payload["tags"]
+    assert all(tag["key"] != "project" for tag in payload["tags"])
 
 
 def test_update_payload_preserves_entity_and_only_sets_units():

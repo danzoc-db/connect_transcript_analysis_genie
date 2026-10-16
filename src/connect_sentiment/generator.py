@@ -144,6 +144,20 @@ INTENTS: tuple[dict[str, Any], ...] = (
         ),
     },
     {
+        "id": "tariff_quote",
+        "queue": "Sales",
+        "reason": "Tariff quote",
+        "opening": (
+            "I would like to compare the available tariffs before my current plan ends.",
+            "Can you explain the fixed and variable tariff options for my account?",
+        ),
+        "agent": (
+            "I will compare the eligible tariffs using your recent annual usage.",
+            "The fixed plan provides price certainty, while the variable plan can change.",
+            "I have sent both quotes with the unit rates and standing charges.",
+        ),
+    },
+    {
         "id": "direct_debit_date",
         "queue": "Account Services",
         "reason": "Change direct debit date",
@@ -158,6 +172,10 @@ INTENTS: tuple[dict[str, Any], ...] = (
         ),
     },
 )
+
+INTENTS_BY_QUEUE = {
+    queue: tuple(intent for intent in INTENTS if intent["queue"] == queue) for queue in QUEUES
+}
 
 REACTIONS = {
     "positive": (
@@ -238,7 +256,8 @@ def _build_contact(
     start_ts: datetime,
     batch_label: str,
 ) -> dict[str, Any]:
-    intent = rng.choice(INTENTS)
+    queue = rng.choice(QUEUES)
+    intent = rng.choice(INTENTS_BY_QUEUE[queue])
     arc = rng.choices(ARCS, weights=ARC_WEIGHTS, k=1)[0]
     agent_id, agent_name = rng.choice(AGENTS)
     context = {

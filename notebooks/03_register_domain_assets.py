@@ -141,6 +141,22 @@ def ensure_uc_tag(full_name: str) -> None:
         print(f"Already tagged: {full_name}")
 
 
+def quote_identifier(value: str) -> str:
+    return f"`{value.replace('`', '``')}`"
+
+
+def grant_analyst_access() -> None:
+    catalog_id = quote_identifier(catalog)
+    schema_id = quote_identifier(schema)
+    analyst_group = quote_identifier("contact_centre_analysts")
+    spark.sql(f"GRANT USE CATALOG ON CATALOG {catalog_id} TO {analyst_group}")
+    spark.sql(f"GRANT USE SCHEMA ON SCHEMA {catalog_id}.{schema_id} TO {analyst_group}")
+    for asset in ("silver_transcript_sentiment", "contact_sentiment_metrics"):
+        asset_id = quote_identifier(asset)
+        spark.sql(f"GRANT SELECT ON TABLE {catalog_id}.{schema_id}.{asset_id} TO {analyst_group}")
+    print("Granted analyst access to the governed semantic layer")
+
+
 for asset in (
     "bronze_connect_transcripts",
     "silver_connect_transcripts",
@@ -148,6 +164,8 @@ for asset in (
     "contact_sentiment_metrics",
 ):
     ensure_uc_tag(f"{catalog}.{schema}.{asset}")
+
+grant_analyst_access()
 
 if genie_space_id:
     configure_genie(genie_space_id)

@@ -9,6 +9,11 @@ from __future__ import annotations
 
 from typing import Any
 
+ENDPOINT_TAGS = [
+    {"key": "demo_project", "value": "connect_transcript_genie"},
+    {"key": "purpose", "value": "transcript_sentiment"},
+]
+
 
 def served_entity(model_name: str, model_version: str, units: int) -> dict[str, Any]:
     """Return the model-unit entity accepted by the PT API."""
@@ -35,10 +40,7 @@ def create_payload(
                 served_entity(model_name, model_version, units),
             ]
         },
-        "tags": [
-            {"key": "project", "value": "connect_transcript_analysis_genie"},
-            {"key": "purpose", "value": "transcript_sentiment"},
-        ],
+        "tags": ENDPOINT_TAGS,
     }
 
 

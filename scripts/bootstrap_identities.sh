@@ -118,8 +118,34 @@ first_line() {
 
 deploy_sp="$(get_or_create_sp sp-connect-transcript-deploy)"
 runtime_sp="$(get_or_create_sp sp-connect-transcript-runtime)"
-get_or_create_group contact_centre_engineers >/dev/null
-get_or_create_group contact_centre_analysts >/dev/null
+engineers_group="$(get_or_create_group contact_centre_engineers)"
+analysts_group="$(get_or_create_group contact_centre_analysts)"
+
+current_user="$(
+  databricks current-user me --profile "$PROFILE" --output json
+)"
+current_user_id="$(jq -r '.id' <<<"$current_user")"
+for group_id in \
+  "$(jq -r '.id' <<<"$engineers_group")" \
+  "$(jq -r '.id' <<<"$analysts_group")"; do
+  if ! databricks groups get "$group_id" --profile "$PROFILE" --output json |
+    jq -e --arg user_id "$current_user_id" \
+      'any(.members[]?; .value == $user_id)' >/dev/null; then
+    membership_patch="$(
+      jq -cn --arg user_id "$current_user_id" '{
+        schemas: ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
+        Operations: [{
+          op: "add",
+          path: "members",
+          value: [{value: $user_id}]
+        }]
+      }'
+    )"
+    databricks groups patch "$group_id" \
+      --profile "$PROFILE" \
+      --json "$membership_patch" >/dev/null
+  fi
+done
 
 deploy_id="$(jq -r '.id' <<<"$deploy_sp")"
 deploy_application_id="$(jq -r '.applicationId' <<<"$deploy_sp")"
@@ -301,15 +327,27 @@ fi
 if [[ -n "$WAREHOUSE_ID" ]]; then
   permission_body="$(
     jq -cn --arg principal "$runtime_application_id" \
-      '{access_control_list: [{
-        service_principal_name: $principal,
-        permission_level: "CAN_USE"
-      }]}'
+      '{
+        access_control_list: [
+          {
+            service_principal_name: $principal,
+            permission_level: "CAN_USE"
+          },
+          {
+            group_name: "contact_centre_engineers",
+            permission_level: "CAN_USE"
+          },
+          {
+            group_name: "contact_centre_analysts",
+            permission_level: "CAN_USE"
+          }
+        ]
+      }'
   )"
   databricks permissions update warehouses "$WAREHOUSE_ID" \
     --profile "$PROFILE" \
     --json "$permission_body" >/dev/null
-  echo "Granted runtime CAN_USE on warehouse $WAREHOUSE_ID"
+  echo "Granted runtime and demo groups CAN_USE on warehouse $WAREHOUSE_ID"
 fi
 
 if [[ -n "$GITHUB_REPO" ]]; then

@@ -78,6 +78,8 @@ def test_domain_bootstrap_uses_full_resource_names():
     bootstrap = (ROOT / "scripts" / "bootstrap_identities.sh").read_text()
     assert "get-domain domains/customer-experience" in bootstrap
     assert "get-domain domains/contact-centre" in bootstrap
+    assert 'path: "members"' in bootstrap
+    assert 'group_name: "contact_centre_analysts"' in bootstrap
 
 
 def test_genie_examples_use_serialized_space_array_contract():

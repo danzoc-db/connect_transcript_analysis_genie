@@ -55,3 +55,14 @@ def test_scoring_job_enforces_hidden_label_quality_target():
     notebook = (ROOT / "notebooks" / "02_score_sentiment.py").read_text()
     assert "scored.sentiment_closing = raw.ContactAttributes.QaArcLabel" in notebook
     assert "agreement < 0.85" in notebook
+
+
+def test_domain_task_grants_analysts_only_semantic_layer_access():
+    notebook = (ROOT / "notebooks" / "03_register_domain_assets.py").read_text()
+    assert "GRANT USE CATALOG" in notebook
+    assert "GRANT USE SCHEMA" in notebook
+    assert '("silver_transcript_sentiment", "contact_sentiment_metrics")' in notebook
+    assert (
+        "bronze_connect_transcripts"
+        not in notebook.split("def grant_analyst_access", 1)[1].split("for asset in (", 1)[0]
+    )
