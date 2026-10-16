@@ -154,6 +154,9 @@ Catalog external location over the export path, or schedule a copy into an ADLS-
 Keep the `connect/Analysis/Voice` path and Contact Lens JSON shape unchanged. Review redaction,
 retention, private connectivity and inference-table access before using real transcripts.
 
+If Amazon Connect transcripts are already in bronze or silver tables in your lakehouse, skip
+landing and ingestion. See [Use existing bronze and silver tables](USE_EXISTING_TABLES.md).
+
 The scoring anti-join limits model calls to new contact IDs. Avoid pipeline full refreshes unless
 the transformation has changed: a refresh rebuilds pipeline tables, while the sentiment MERGE
 still preserves already-scored contact IDs.
