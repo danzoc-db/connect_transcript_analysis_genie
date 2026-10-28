@@ -1,4 +1,7 @@
-"""Behaviours of the synthetic Amazon Connect generator (offline)."""
+"""Behaviours of the synthetic Amazon Connect generator (offline).
+
+All data in these tests is synthetic and generated at runtime; no real personal data is used.
+"""
 
 from __future__ import annotations
 
@@ -7,6 +10,8 @@ import random
 from pathlib import Path
 
 from connect_sentiment.generator import (
+    BRAND,
+    DATA_NOTICE,
     INTENTS,
     QUEUES,
     generate_contacts,
@@ -69,14 +74,22 @@ def test_written_files_are_ascii_and_path_matches_connect_layout(tmp_path: Path)
         assert payload["CustomerMetadata"]["ContactId"] in name
 
 
-def test_bge_appears_only_in_agent_greetings():
+def test_fictional_brand_appears_only_in_agent_greetings():
     contacts = generate_contacts(random.Random(2), n=20, plant_bad=False)
     for _rel, contact in contacts:
         for turn in contact["Transcript"]:
             text = turn["Content"]
-            if "BGE" in text:
+            if BRAND in text:
                 assert turn["ParticipantId"] == "AGENT"
-                assert text.startswith("Thanks for calling BGE") or "calling BGE" in text
+                assert text.startswith(f"Thanks for calling {BRAND}")
+
+
+def test_every_contact_carries_the_synthetic_data_notice():
+    contacts = generate_contacts(random.Random(4), n=10, plant_bad=False)
+    assert BRAND == "Northwind Energy"
+    for _rel, contact in contacts:
+        assert contact["ContactAttributes"]["DataNotice"] == DATA_NOTICE
+        assert DATA_NOTICE.startswith("SYNTHETIC")
 
 
 def test_turns_within_a_contact_stay_on_one_intent():

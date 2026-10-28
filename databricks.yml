@@ -18,6 +18,10 @@ variables:
     description: Existing Unity Catalog catalog.
   schema:
     description: Schema for transcript analytics assets.
+  # warehouse_id and the two service principal IDs are workspace-specific and intentionally have
+  # no value in this public repo. Supply them per deployment, for example
+  # BUNDLE_VAR_warehouse_id=<id> or `--var warehouse_id=<id>`, or in the gitignored
+  # .databricks/bundle/<target>/variable-overrides.json.
   warehouse_id:
     description: SQL warehouse used by the metric-view task and Genie.
   sentiment_endpoint_name:
@@ -38,19 +42,16 @@ variables:
 targets:
   dev:
     default: true
-    workspace:
-      profile: azsu-centrica-demo
+    # No workspace is wired in. Authenticate with your own CLI profile, for example
+    # `DATABRICKS_CONFIG_PROFILE=<your-profile> databricks bundle deploy -t dev`.
     variables:
       catalog: contact_centre_analytics
       schema: connect_analytics_dev
-      warehouse_id: 4c992f1d4de33244
       sentiment_endpoint_name: connect-sentiment-gpt-oss-20b
       sentiment_base_model: system.ai.gpt-oss-20b
       sentiment_model_version: "1"
       sentiment_model_units: 50
       scoring_max_workers: 8
-      runtime_service_principal_name: ac987c67-e11e-4f57-a001-a97868846e8a
-      deploy_service_principal_name: ce8ab7f6-be4b-45fb-b820-7cd48de9b1a3
     resources:
       pipelines:
         transcript_pipeline:
@@ -69,14 +70,11 @@ targets:
     variables:
       catalog: contact_centre_analytics
       schema: connect_analytics
-      warehouse_id: 4c992f1d4de33244
       sentiment_endpoint_name: connect-sentiment-gpt-oss-20b
       sentiment_base_model: system.ai.gpt-oss-20b
       sentiment_model_version: "1"
       sentiment_model_units: 50
       scoring_max_workers: 8
-      runtime_service_principal_name: ac987c67-e11e-4f57-a001-a97868846e8a
-      deploy_service_principal_name: ce8ab7f6-be4b-45fb-b820-7cd48de9b1a3
     resources:
       jobs:
         connect_transcript_sentiment_job:

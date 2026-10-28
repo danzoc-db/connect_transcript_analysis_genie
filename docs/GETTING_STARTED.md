@@ -28,22 +28,26 @@ and [Foundation Model APIs compliance](https://docs.databricks.com/en/machine-le
 
 ## 1. Configure the targets
 
-Edit only the `dev` and `prod` overrides in `databricks.yml`:
+This public repository is not wired to any workspace. `databricks.yml` contains no profile,
+host, warehouse ID or service principal ID. Set `catalog` and `schema` in the `dev` and `prod`
+overrides if needed, and supply the workspace-specific values at deploy time:
 
-- `workspace.profile`
-- `catalog`
-- `schema`
 - `warehouse_id`
 - `runtime_service_principal_name`
 - `deploy_service_principal_name`
 
-The root `variables` block intentionally contains no workspace-specific defaults.
+Use `BUNDLE_VAR_<name>` environment variables, `--var <name>=<value>`, or the gitignored
+`.databricks/bundle/<target>/variable-overrides.json`. Never commit these values to a public
+repository.
 
-Authenticate and verify the target:
+Authenticate with your own CLI profile and verify the target:
 
 ```bash
 databricks auth login --host https://your-workspace-host --profile your-profile
-databricks current-user me --profile your-profile
+export DATABRICKS_CONFIG_PROFILE=your-profile
+export BUNDLE_VAR_warehouse_id=<warehouse-id>
+export BUNDLE_VAR_runtime_service_principal_name=<runtime-sp-application-id>
+export BUNDLE_VAR_deploy_service_principal_name=<deploy-sp-application-id>
 databricks bundle validate -t dev
 ```
 
@@ -84,25 +88,24 @@ bash scripts/bootstrap_identities.sh \
 The account profile is required to grant Service Principal User to the deploy identity. If it is
 omitted, the script prints the remaining account-admin role assignment.
 
-For this demo, create a workspace OAuth secret for the deploy principal and store these GitHub
-settings:
+### Optional: deploy from GitHub Actions
+
+The public CI in this repository runs offline lint and tests only. To deploy from GitHub, use a
+**private fork** and copy `templates/github-actions/deploy.yml.template` to
+`.github/workflows/deploy.yml`. The template uses GitHub OIDC workload identity federation, so
+no client secret is stored. Configure a Databricks federation policy for your repository and set
+these repository variables for your own workspace:
 
 ```text
 Variable: DATABRICKS_HOST
+Variable: DATABRICKS_CLIENT_ID
 Variable: DATABRICKS_RUNTIME_CLIENT_ID
-Secret:   DATABRICKS_CLIENT_ID
-Secret:   DATABRICKS_CLIENT_SECRET
+Variable: DATABRICKS_WAREHOUSE_ID
 ```
 
-For customer deployments, prefer GitHub OIDC workload identity federation. Configure a
-Databricks federation policy for the repository, grant `id-token: write` in the workflows, set
-`DATABRICKS_AUTH_TYPE: github-oidc`, and remove the stored client secret.
-
-If the workspace enforces an IP access list, GitHub-hosted runner addresses may be blocked.
-Register a self-hosted runner on an allowed network, set the repository variable
-`DATABRICKS_RUNNER` to its runner label, and set `DATABRICKS_WORKSPACE_CI_ENABLED=true`.
-Offline pull-request lint and tests remain on GitHub-hosted runners; workspace bundle validation
-and deployment use the network-approved runner.
+Add a required-reviewer protection rule to the `production` environment. If the workspace
+enforces an IP access list, register a self-hosted runner on an allowed network and set the
+repository variable `DATABRICKS_RUNNER` to its runner label.
 
 ## 3. Create the parked PT endpoint
 
@@ -193,5 +196,5 @@ contain transcript text.
 
 The governance task assigns the silver tables, metric view and Genie space to the
 `Customer Experience > Contact Centre` domain. Make semantic changes in a workspace Git folder,
-create a branch and pull request, and let CI validate and deploy the bundle rather than editing
-production resources in place.
+create a branch and pull request, and let CI validate the change before you deploy the bundle,
+rather than editing production resources in place.

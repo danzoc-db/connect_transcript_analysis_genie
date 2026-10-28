@@ -135,10 +135,11 @@ exceptions (not bare `except:`), and log properly.
 - Workspace-specific values (warehouse IDs, service principal IDs, hosts) must go in
   **target overrides**, not the root `variables:` block.
 
-### 13. Customer Name and Non-ASCII Leakage
+### 13. Real-Organisation and Non-ASCII Leakage
 
-- The repo is public. The customer is never named. Keep the terms to block in the
-  gitignored `docs/internal/denylist.txt` (one per line) and check before every commit:
+- The repo is public and all data is fictional (Northwind Energy). Never reference a real
+  company, workspace, CLI profile or asset. Keep the terms to block in the gitignored
+  `docs/internal/denylist.txt` (one per line) and check before every commit:
   ```bash
   grep -rniFf docs/internal/denylist.txt . --exclude-dir=.git --exclude-dir=internal
   LC_ALL=C grep -rnP "[^\x00-\x7F]" . --exclude-dir=.git

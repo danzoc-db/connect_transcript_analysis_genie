@@ -17,3 +17,9 @@ Do not include workspace tokens, OAuth secrets, transcript data or personal info
   needs.
 - Keep production changes behind pull requests and required CI checks.
 - Do not use this synthetic demo repository to store real contact-centre transcripts.
+
+## Data privacy
+
+All data in this repository is synthetically generated and fictional ("Northwind Energy" is not
+a real company). The repository contains no personal data and no workspace credentials, and
+its public CI is not connected to any Databricks workspace.

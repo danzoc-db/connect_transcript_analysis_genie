@@ -22,14 +22,16 @@ published as a **Unity Catalog metric view**, and queried in natural language th
 The repo is **public** and targets **external customer sharing**. All code, docs, and config
 must be free of internal or customer-identifying data and deployable to any Databricks workspace.
 
-**Read `docs/BUILD_PLAN.md` first.** It holds the phased build, acceptance criteria, and the
-facts that were verified against a live workspace on 9 Oct 2026.
+**All data is synthetic.** The generator invents every transcript for the fictional company
+"Northwind Energy". The repo must never wire to a real workspace, customer system or
+customer-named asset. Read `docs/architecture-decisions.md` for the design rationale.
 
 ## Golden Rules
 
 * Don't put emojis in SQL, Python, or general code files
-* **ASCII only** in every file (0x00-0x7F). No em dashes, curly quotes, accented letters, or the euro sign (write "euro").
-* **Never name the customer.** Do not write the customer's company name anywhere in the repo, commit messages, or PR text. The synthetic transcripts may use the brand "BGE" in agent greetings only.
+* **ASCII only** in every file (0x00-0x7F). No em dashes, curly quotes, accented letters, or currency symbols (write the currency as a word).
+* **Fictional data only.** Use only the fictional brand "Northwind Energy" and invented names, regions and IDs. Never reference a real company, customer, workspace, profile, warehouse, service principal or repository in code, docs, commit messages or PR text.
+* **No live wiring.** Public CI stays offline. Workspace values are supplied at deploy time, never committed. The deploy workflow lives in `templates/github-actions/`.
 * **NEVER GIVE UP!** Always investigate thoroughly before concluding something is missing or broken
   * Always search with CLI/API, check multiple sources, verify before concluding
   * If something worked before and "disappeared", it's likely still there - just hidden
@@ -47,7 +49,7 @@ facts that were verified against a live workspace on 9 Oct 2026.
 * **Sentiment contract is fixed** - the `sentiment` columns must return exactly what
   `ai_analyze_sentiment` returns: STRING, one of `positive`, `negative`, `neutral`, `mixed`, or `NULL`.
   Do NOT call `ai_analyze_sentiment` (blocked without cross-geo processing). Call the Unity AI
-  Gateway model service with a strict JSON schema (see `docs/BUILD_PLAN.md`).
+  Gateway model service with a strict JSON schema (see `docs/architecture-decisions.md`).
 * **Unity AI Gateway, not classic endpoint gateways** - use ONE Databricks-hosted
   provisioned-throughput endpoint serving `system.ai.gpt-oss-20b`. The current DAB provider uses
   the wrong API for model-unit PT, so `scripts/manage_pt_endpoint.py` owns endpoint creation and

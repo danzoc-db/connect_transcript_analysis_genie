@@ -4,10 +4,11 @@ on:
   pull_request:
   workflow_dispatch:
 
+# Offline checks only. This public repository is not connected to any Databricks workspace and
+# holds no workspace credentials. To deploy from your own fork, start from
+# templates/github-actions/deploy.yml.template.
 permissions:
   contents: read
-  # Recommended with GitHub OIDC workload identity federation:
-  # id-token: write
 
 jobs:
   validate:
@@ -22,18 +23,3 @@ jobs:
         run: uv run --group dev pytest -q
       - name: Verify bundle schema is available
         run: databricks bundle schema >/dev/null
-
-  workspace-validate:
-    if: ${{ vars.DATABRICKS_WORKSPACE_CI_ENABLED == 'true' }}
-    runs-on: ${{ vars.DATABRICKS_RUNNER }}
-    env:
-      DATABRICKS_HOST: ${{ vars.DATABRICKS_HOST }}
-      DATABRICKS_CLIENT_ID: ${{ secrets.DATABRICKS_CLIENT_ID }}
-      DATABRICKS_CLIENT_SECRET: ${{ secrets.DATABRICKS_CLIENT_SECRET }}
-      # Recommended alternative after configuring workload identity federation:
-      # DATABRICKS_AUTH_TYPE: github-oidc
-    steps:
-      - uses: actions/checkout@v4
-      - uses: databricks/setup-cli@main
-      - name: Validate production bundle against the workspace
-        run: databricks bundle validate -t prod

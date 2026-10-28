@@ -1,5 +1,6 @@
 """Static checks for portable bundle configuration."""
 
+import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -29,8 +30,15 @@ def test_workspace_values_only_appear_in_target_overrides():
     text = (ROOT / "databricks.yml").read_text()
     root, targets = text.split("targets:", 1)
     assert "contact_centre_analytics" not in root
-    assert "azsu-centrica-demo" not in root
     assert "contact_centre_analytics" in targets
+
+
+def test_bundle_is_not_wired_to_any_live_workspace():
+    text = (ROOT / "databricks.yml").read_text()
+    assert "profile:" not in text
+    assert "host:" not in text
+    assert not re.search(r"warehouse_id: *[0-9a-f]{16}", text)
+    assert not re.search(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", text)
 
 
 def test_deploy_identity_retains_management_access():
@@ -55,23 +63,27 @@ def test_model_unit_endpoint_stays_outside_bundle_state():
     assert (ROOT / "scripts" / "manage_pt_endpoint.py").exists()
 
 
-def test_github_workflows_validate_and_deploy_the_bundle():
-    ci = (ROOT / ".github" / "workflows" / "ci.yml").read_text()
-    deploy = (ROOT / ".github" / "workflows" / "deploy.yml").read_text()
+def test_public_ci_is_offline_and_deploy_is_a_template():
+    workflows = ROOT / ".github" / "workflows"
+    assert sorted(p.name for p in workflows.glob("*.yml")) == ["ci.yml"]
+    ci = (workflows / "ci.yml").read_text()
     assert "ruff check ." in ci
     assert "pytest -q" in ci
-    assert "databricks bundle validate -t prod" in ci
-    assert "scripts/manage_pt_endpoint.py" in deploy
-    assert "--units 0" in deploy
-    assert "--runtime-principal" in deploy
-    assert "databricks bundle deploy -t prod" in deploy
-    assert "scripts/grant_bundle_file_access.py" in deploy
-    assert "bundle summary -t prod --output json" in deploy
-    assert "--pipeline-id" in deploy
-    assert "databricks bundle run -t prod connect_transcript_sentiment_job" in deploy
-    assert "--params contacts=20,batch_label=production" in deploy
-    assert "DATABRICKS_AUTH_TYPE: github-oidc" in ci
-    assert "DATABRICKS_AUTH_TYPE: github-oidc" in deploy
+    for wired in (
+        "secrets.",
+        "DATABRICKS_HOST",
+        "DATABRICKS_CLIENT",
+        "bundle deploy",
+        "bundle run",
+    ):
+        assert wired not in ci
+    template = (ROOT / "templates" / "github-actions" / "deploy.yml.template").read_text()
+    assert "scripts/manage_pt_endpoint.py" in template
+    assert "--units 0" in template
+    assert "databricks bundle deploy -t prod" in template
+    assert "scripts/grant_bundle_file_access.py" in template
+    assert "databricks bundle run -t prod connect_transcript_sentiment_job" in template
+    assert "DATABRICKS_AUTH_TYPE: github-oidc" in template
 
 
 def test_domain_bootstrap_uses_full_resource_names():

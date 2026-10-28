@@ -44,8 +44,8 @@ Genie space
 
 Databricks Asset Bundles manage the schema, volume, pipeline, job, model service and Genie
 space. The PT endpoint is the sole exception because the current bundle provider uses the
-classic update API rather than the required model-unit PT API. GitHub Actions validates pull
-requests and deploys the production target.
+classic update API rather than the required model-unit PT API. GitHub Actions runs offline lint
+and tests on pull requests; deployment is a template you enable in your own private fork.
 
 The domain hierarchy is `Customer Experience > Contact Centre`. The governance task assigns
 the bronze table, silver table, sentiment table, metric view and Genie space to its governed

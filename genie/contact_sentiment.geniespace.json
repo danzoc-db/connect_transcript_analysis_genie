@@ -9,6 +9,7 @@
           "Sentiment is positive, negative, neutral, mixed, or NULL.\n",
           "Negative share means negative contacts divided by scored contacts.\n",
           "Weeks start on Monday.\n",
+          "All data is synthetic and describes the fictional company Northwind Energy; it contains no real personal data.\n",
           "Do not show full transcript text unless the user explicitly asks for examples.\n"
         ]
       }

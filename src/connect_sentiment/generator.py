@@ -1,4 +1,10 @@
-"""Generate coherent synthetic Amazon Connect Contact Lens transcripts."""
+"""Generate coherent synthetic Amazon Connect Contact Lens transcripts.
+
+DATA PRIVACY NOTICE: every value this module produces is synthetically generated at runtime.
+"Northwind Energy" is a fictional company. Agent names, regions, amounts, meter readings and
+identifiers are invented and do not describe any real organisation, customer, employee or
+contact. No real transcripts, recordings or personal data are read, stored or used here.
+"""
 
 from __future__ import annotations
 
@@ -23,15 +29,26 @@ QUEUES = (
     "Sales",
     "Smart Meters",
 )
+# Fictional brand, agents and regions. None of these refer to a real company or person.
+BRAND = "Northwind Energy"
+DATA_NOTICE = "SYNTHETIC: fictional data generated for a demo. Contains no real personal data."
 AGENTS = (
-    ("a-1001", "Aoife"),
-    ("a-1002", "Ciaran"),
-    ("a-1003", "Niamh"),
-    ("a-1004", "Darragh"),
-    ("a-1005", "Siobhan"),
-    ("a-1006", "Eoin"),
+    ("a-1001", "Alex"),
+    ("a-1002", "Sam"),
+    ("a-1003", "Jordan"),
+    ("a-1004", "Taylor"),
+    ("a-1005", "Morgan"),
+    ("a-1006", "Casey"),
 )
-COUNTIES = ("Dublin", "Cork", "Galway", "Limerick", "Kildare", "Meath", "Wexford")
+COUNTIES = (
+    "Northvale",
+    "Eastmere",
+    "Westbrook",
+    "Southfield",
+    "Lakeshire",
+    "Hillford",
+    "Rivermoor",
+)
 ACCOUNT_ID = "123456789012"
 INSTANCE_ID = "6f1c2a8e-4b7d-4e0a-9c2f-3d5e7a1b9c40"
 
@@ -50,7 +67,7 @@ INTENTS: tuple[dict[str, Any], ...] = (
         "queue": "Billing",
         "reason": "High bill query",
         "opening": (
-            "My bill is {amount} euro, nearly double normal, and I think the estimate is wrong.",
+            "My bill is {amount} dollars, nearly double normal, and I think the estimate is wrong.",
             "I have another unusually high estimated bill and need it corrected.",
         ),
         "agent": (
@@ -64,7 +81,7 @@ INTENTS: tuple[dict[str, Any], ...] = (
         "queue": "Payments",
         "reason": "Payment plan and arrears",
         "opening": (
-            "I am behind by {amount} euro and worried about the arrears letter.",
+            "I am behind by {amount} dollars and worried about the arrears letter.",
             "I need an affordable payment plan because I cannot clear the balance at once.",
         ),
         "agent": (
@@ -230,7 +247,10 @@ def _dialogue(
     context: dict[str, Any],
 ) -> tuple[list[dict[str, Any]], int]:
     lines = [
-        ("AGENT", f"Thanks for calling BGE, you are speaking with {agent_name}. How can I help?"),
+        (
+            "AGENT",
+            f"Thanks for calling {BRAND}, you are speaking with {agent_name}. How can I help?",
+        ),
         ("CUSTOMER", _fill(rng.choice(intent["opening"]), context)),
     ]
     for agent_line, customer_line in zip(intent["agent"], REACTIONS[arc], strict=True):
@@ -274,7 +294,7 @@ def _build_contact(
         "Channel": "VOICE",
         "ContentMetadata": {"Output": "Redacted", "RedactionTypes": ["PII"]},
         "JobStatus": "COMPLETED",
-        "LanguageCode": "en-IE",
+        "LanguageCode": "en-US",
         "Participants": [
             {"ParticipantId": "AGENT", "ParticipantRole": "AGENT"},
             {"ParticipantId": "CUSTOMER", "ParticipantRole": "CUSTOMER"},
@@ -297,6 +317,7 @@ def _build_contact(
             "QaArcLabel": arc,
             "QaIntentId": intent["id"],
             "BatchLabel": batch_label,
+            "DataNotice": DATA_NOTICE,
         },
         "ConversationCharacteristics": {"TotalConversationDurationMillis": total_ms},
         "Transcript": transcript,

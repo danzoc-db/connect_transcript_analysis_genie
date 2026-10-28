@@ -39,6 +39,10 @@ columns. Everything else in the row is copied into the sentiment table and is op
 | `queue`, `contact_reason`, `agent_name` | STRING | Metric-view dimensions |
 | `hold_seconds`, `duration_seconds`, `transferred` | INT, DOUBLE, BOOLEAN | Handling measures |
 
+> **Data privacy.** This repository ships only synthetic data. Real transcripts are personal
+> data: complete your own data-protection assessment, restrict access to the tables and the
+> inference payload table, and keep real data out of any public repository or fork.
+
 `county` and `segment` are synthetic demo dimensions. Map them to real columns or remove them
 from the metric view.
 

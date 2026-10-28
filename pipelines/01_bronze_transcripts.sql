@@ -1,6 +1,8 @@
+-- DATA PRIVACY: the source files are synthetic and generated at runtime by
+-- src/connect_sentiment/generator.py. No real transcripts or personal data are ingested.
 -- Auto Loader incrementally ingests multiline Contact Lens JSON from the UC volume.
 CREATE OR REFRESH STREAMING TABLE bronze_connect_transcripts
-COMMENT 'Raw Amazon Connect Contact Lens post-call analysis JSON with ingestion metadata.'
+COMMENT 'Raw Amazon Connect Contact Lens post-call analysis JSON with ingestion metadata. Synthetic demo data only; contains no real personal data.'
 AS
 SELECT
   *,

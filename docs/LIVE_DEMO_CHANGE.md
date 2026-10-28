@@ -1,7 +1,7 @@
 # Live Demo Change: add "sentiment recovery rate" with Genie Code
 
-The one change made live in the room. It must be built and tested during the build (Phase 4),
-then removed from `main` so it can be added again live. The exact prompt and expected diff are
+The one change made live in the room. Build and test it beforehand, then remove it from `main`
+so it can be added again live. The exact prompt and expected diff are
 kept here, and the measure is also left **commented out** in `sql/contact_sentiment_metrics.sql`
 as a safety net.
 
@@ -14,7 +14,7 @@ the share that **ended** `positive`. It answers "how often do our agents turn a 
 
 - [ ] Endpoint warmed (send one request through the model service about 15 minutes before; the change itself does not call the model).
 - [ ] Git folder open at `/Workspace/Users/<you>/connect_transcript_analysis_genie`, on `main`, pulled.
-- [ ] GitHub repo open on the Actions tab.
+- [ ] GitHub repo (your private fork with the deploy template enabled) open on the Actions tab.
 - [ ] Genie space open; confirm the question below currently cannot be answered (no such measure).
 - [ ] Timings from the last rehearsal recorded below.
 
@@ -25,7 +25,7 @@ the share that **ended** `positive`. It answers "how often do our agents turn a 
 3. Review the diff Genie Code proposes (should match "Expected diff").
 4. Commit and push from the Git folder dialog. Open the PR on GitHub (link from the push).
 5. Show CI: lint + `bundle validate` go green. Merge (squash).
-6. Show the deploy workflow: `bundle deploy -t prod`, then the metric-view publish.
+6. Show the deploy workflow from your fork: `bundle deploy -t prod`, then the metric-view publish.
 7. In Genie: ask the question below.
 
 ## Genie Code prompt
