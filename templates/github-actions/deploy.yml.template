@@ -1,3 +1,16 @@
+# TEMPLATE ONLY. This file is deliberately outside .github/workflows so it never runs in this
+# public repository, which is not connected to any Databricks workspace.
+#
+# To deploy from your own private fork:
+#   1. Copy this file to .github/workflows/deploy.yml.
+#   2. Configure GitHub OIDC workload identity federation for a deploy service principal
+#      (no stored client secret). See docs/GETTING_STARTED.md.
+#   3. Set repository variables DATABRICKS_HOST, DATABRICKS_CLIENT_ID,
+#      DATABRICKS_RUNTIME_CLIENT_ID and DATABRICKS_WAREHOUSE_ID for YOUR workspace.
+#   4. Add a required-reviewer protection rule to the `production` environment.
+#
+# The demo deploys synthetic data only. Never point it at real contact-centre recordings.
+
 name: Deploy
 
 on:
@@ -8,8 +21,7 @@ on:
 
 permissions:
   contents: read
-  # Recommended with GitHub OIDC workload identity federation:
-  # id-token: write
+  id-token: write
 
 concurrency:
   group: production-deploy
@@ -21,10 +33,11 @@ jobs:
     environment: production
     env:
       DATABRICKS_HOST: ${{ vars.DATABRICKS_HOST }}
-      DATABRICKS_CLIENT_ID: ${{ secrets.DATABRICKS_CLIENT_ID }}
-      DATABRICKS_CLIENT_SECRET: ${{ secrets.DATABRICKS_CLIENT_SECRET }}
-      # Recommended alternative after configuring workload identity federation:
-      # DATABRICKS_AUTH_TYPE: github-oidc
+      DATABRICKS_CLIENT_ID: ${{ vars.DATABRICKS_CLIENT_ID }}
+      DATABRICKS_AUTH_TYPE: github-oidc
+      BUNDLE_VAR_warehouse_id: ${{ vars.DATABRICKS_WAREHOUSE_ID }}
+      BUNDLE_VAR_runtime_service_principal_name: ${{ vars.DATABRICKS_RUNTIME_CLIENT_ID }}
+      BUNDLE_VAR_deploy_service_principal_name: ${{ vars.DATABRICKS_CLIENT_ID }}
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6

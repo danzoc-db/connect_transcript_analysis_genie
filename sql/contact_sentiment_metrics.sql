@@ -6,7 +6,7 @@ WITH METRICS
 LANGUAGE YAML
 AS $$
 version: 1.1
-comment: Governed contact-centre sentiment, service and handling KPIs.
+comment: Governed contact-centre sentiment, service and handling KPIs. Synthetic demo data only; contains no real personal data.
 source: silver_transcript_sentiment
 dimensions:
   - name: contact_date
@@ -29,7 +29,7 @@ dimensions:
     comment: Synthetic display name of the handling agent.
   - name: county
     expr: county
-    comment: Synthetic customer county.
+    comment: Synthetic, fictional customer region.
   - name: segment
     expr: segment
     comment: Synthetic customer segment.

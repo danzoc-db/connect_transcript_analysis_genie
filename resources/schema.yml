@@ -3,7 +3,7 @@ resources:
     analytics_schema:
       name: ${var.schema}
       catalog_name: ${var.catalog}
-      comment: Contact centre transcript analytics managed by Databricks Asset Bundles.
+      comment: Contact centre transcript analytics managed by Databricks Asset Bundles. Synthetic demo data only; contains no real personal data.
       grants:
         - principal: ${var.runtime_service_principal_name}
           privileges:
@@ -26,7 +26,7 @@ resources:
       catalog_name: ${var.catalog}
       schema_name: ${resources.schemas.analytics_schema.name}
       volume_type: MANAGED
-      comment: Synthetic or copied Amazon Connect Contact Lens JSON landing area.
+      comment: Synthetic Amazon Connect Contact Lens JSON landing area. Synthetic demo data only; contains no real personal data.
       grants:
         - principal: ${var.runtime_service_principal_name}
           privileges:

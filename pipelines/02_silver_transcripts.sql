@@ -17,7 +17,7 @@ CREATE OR REFRESH STREAMING TABLE silver_connect_transcripts (
   ),
   CONSTRAINT plausible_duration EXPECT (duration_seconds BETWEEN 10 AND 7200)
 )
-COMMENT 'Cleansed contact transcripts with customer-only early, middle, late and overall text.'
+COMMENT 'Cleansed contact transcripts with customer-only early, middle, late and overall text. Synthetic demo data only; contains no real personal data.'
 AS
 WITH ordered AS (
   SELECT

@@ -115,7 +115,7 @@ def send_gateway(request_body):
 spark.sql(
     f"""
     CREATE TABLE IF NOT EXISTS {sentiment_table}
-    COMMENT 'Contact-level sentiment and within-call trajectory scored through Unity AI Gateway.'
+    COMMENT 'Synthetic demo data: contact sentiment via Unity AI Gateway. No real personal data.'
     AS
     SELECT
       s.*,

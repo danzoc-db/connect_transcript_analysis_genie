@@ -1,5 +1,9 @@
 # Databricks notebook source
-"""Land an idempotent batch of synthetic Contact Lens transcript JSON."""
+"""Land an idempotent batch of synthetic Contact Lens transcript JSON.
+
+DATA PRIVACY NOTICE: every transcript is synthetically generated at runtime for a fictional
+company (Northwind Energy). No real customer, employee or personal data is used.
+"""
 
 import sys
 from pathlib import Path

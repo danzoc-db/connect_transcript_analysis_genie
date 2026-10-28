@@ -1,5 +1,11 @@
 # Connect Transcript Analysis + Genie
 
+> **Synthetic data disclaimer.** Every transcript, name, region, amount and identifier in this
+> repository is synthetically generated at runtime by `src/connect_sentiment/generator.py`.
+> "Northwind Energy" is a fictional company. This repository contains no real customer,
+> employee or personal data, is not connected to any customer system or Databricks workspace,
+> and does not describe any real organisation's environment.
+
 This public Databricks demo turns synthetic Amazon Connect Contact Lens transcripts into
 governed contact-centre insights that analysts can query in natural language.
 
@@ -39,7 +45,8 @@ units only while scoring and parked at zero afterward.
 - Unity Catalog domains group the silver tables, sentiment table, metric view and Genie space.
 - Offline tests cover coherent data generation, scoring behavior, data-quality expectations and
   bundle contracts.
-- GitHub Actions validates pull requests and deploys `main`.
+- GitHub Actions runs offline lint and tests on pull requests. A deploy workflow template for
+  your own private fork is in `templates/github-actions/`.
 
 ## Quick start
 
@@ -47,4 +54,11 @@ See [Getting started](docs/GETTING_STARTED.md). The design rationale is in
 [Architecture decisions](docs/architecture-decisions.md), and the presenter workflow is in
 [Demo guide](docs/DEMO_GUIDE.md).
 
-This project generates fictional data. It does not contain real customer or personal data.
+## Data privacy
+
+- All data is synthetic and generated at runtime; no dataset is stored in this repository.
+- Generated records carry a `ContactAttributes.DataNotice` field, and every table, volume,
+  metric view and Genie space created by the bundle is labelled as synthetic.
+- Do not load real recordings or transcripts into a deployment of this demo. If you adapt it
+  for real data, apply your own data-protection assessment, access controls and retention
+  rules first (see [Using existing tables](docs/USE_EXISTING_TABLES.md)).

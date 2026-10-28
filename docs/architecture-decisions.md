@@ -7,11 +7,11 @@ Each record states the context, the decision, and the alternatives considered. F
 
 ## ADR-1: Self-hosted open model behind a Unity AI Gateway model service (not ai_analyze_sentiment, not hosted Claude)
 
-**Context.** The target workspace runs in Azure UK South **without cross-geo processing**.
-`ai_analyze_sentiment` is unavailable there. Databricks-hosted Claude is pay-per-token only on
+**Context.** The design assumes a workspace in a region **without cross-geo processing**, where
+`ai_analyze_sentiment` is unavailable. Databricks-hosted Claude is pay-per-token only on
 Azure (verified: `optimizable: false` for provisioned throughput) and is served outside the
 workspace geography (verified on a Central US workspace: responses report `us.anthropic.*`).
-The customer also wants their own endpoint, monitored through the latest Unity AI Gateway.
+The design also calls for a dedicated endpoint, monitored through the latest Unity AI Gateway.
 
 **Decision.**
 - Host `system.ai.gpt-oss-20b` on our own **provisioned-throughput** serving endpoint (switched
@@ -23,8 +23,8 @@ The customer also wants their own endpoint, monitored through the latest Unity A
   front of it, with a provisioned-throughput destination, rate limits, an inference table and
   EXECUTE grants. Every sentiment call goes through the model service.
 - Return exactly the `ai_analyze_sentiment` contract (`positive` / `negative` / `neutral` /
-  `mixed` / NULL), so downstream SQL, metric views and Genie are unchanged if the customer later
-  gets `ai_analyze_sentiment` back.
+  `mixed` / NULL), so downstream SQL, metric views and Genie are unchanged if `ai_analyze_sentiment`
+  later becomes available.
 
 **Consequence.** `ai_query` cannot target a custom model service yet (verified: 404), so
 sentiment is scored by a Python job task calling the gateway route
@@ -73,7 +73,7 @@ live demo, sentiment recovery rate) are defined once in a metric view (YAML 1.1)
 by a SQL task. Genie, dashboards and SQL all read the same definitions. Materialization is used
 where the workspace supports it.
 
-**Alternative.** Per-tool measures (DAX, Copilot prompts), which drift and cannot be reviewed in a PR.
+**Alternative.** Per-tool measures (BI semantic models, ad hoc AI assistant prompts), which drift and cannot be reviewed in a PR.
 
 ---
 
@@ -95,5 +95,6 @@ service principal (`run_as` for the job, data and model-service privileges only)
 CAN_MANAGE_RUN (engineers) or CAN_VIEW (analysts). Production-mode bundles stop config being
 edited in the UI, so every change goes through a PR.
 
-For the demo, CI authenticates with an OAuth M2M secret. The recommended customer setup is
-**GitHub OIDC workload identity federation** (no stored secret), documented in GETTING_STARTED.
+The public repository's CI is offline only and holds no credentials. The deploy workflow is a
+template (`templates/github-actions/`) for a private fork, using **GitHub OIDC workload identity
+federation** (no stored secret), documented in GETTING_STARTED.
